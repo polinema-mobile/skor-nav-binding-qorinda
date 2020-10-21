@@ -4,12 +4,19 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentResultListener;
+import androidx.navigation.Navigation;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import id.ac.polinema.skor.R;
+import id.ac.polinema.skor.databinding.FragmentScoreBinding;
 import id.ac.polinema.skor.models.GoalScorer;
 
 /**
@@ -23,6 +30,9 @@ public class ScoreFragment extends Fragment {
 
 	private List<GoalScorer> homeGoalScorerList;
 	private List<GoalScorer> awayGoalScorerList;
+
+	private TextView input_name;
+	private TextView input_minute;
 
 	public ScoreFragment() {
 		// Required empty public constructor
@@ -38,15 +48,61 @@ public class ScoreFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 							 Bundle savedInstanceState) {
-		return null;
+        FragmentScoreBinding binding = DataBindingUtil
+                .inflate(inflater, R.layout.fragment_score, container, false);
+        binding.setHomeGoalScorerList(homeGoalScorerList);
+        binding.setAwayGoalScorerList(awayGoalScorerList);
+        binding.setFragment(this);
+        getParentFragmentManager().setFragmentResultListener(HOME_REQUEST_KEY, this, new FragmentResultListener() {
+            @Override
+            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                GoalScorer goalScorer = result.getParcelable(SCORER_KEY);
+                homeGoalScorerList.add(goalScorer);
+            }
+        });
+
+        getParentFragmentManager().setFragmentResultListener(AWAY_REQUEST_KEY, this, new FragmentResultListener() {
+            @Override
+            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                GoalScorer awayScorer = result.getParcelable(SCORER_KEY);
+                awayGoalScorerList.add(awayScorer);
+            }
+        });
+        return binding.getRoot();
 	}
 
 	public void onAddHomeClick(View view) {
-
+		ScoreFragmentDirections.GoalScorerAction action = ScoreFragmentDirections.goalScorerAction(HOME_REQUEST_KEY);
+		Navigation.findNavController(view).navigate(action);
 	}
 
 	public void onAddAwayClick(View view) {
+		ScoreFragmentDirections.GoalScorerAction action = ScoreFragmentDirections.goalScorerAction(AWAY_REQUEST_KEY);
+		Navigation.findNavController(view).navigate(action);
+	}
 
+	public String getHomeScorer(){
+		StringBuilder result = new StringBuilder();
+		for (GoalScorer g : homeGoalScorerList) {
+			result.append(g.getName())
+					.append(" ")
+					.append(g.getMinute())
+					.append("\" ");
+		}
+
+		return result.toString();
+	}
+
+	public String getAwayScorer(){
+		StringBuilder result = new StringBuilder();
+		for (GoalScorer g : awayGoalScorerList) {
+			result.append(g.getName())
+					.append(" ")
+					.append(g.getMinute())
+					.append("\" ");
+		}
+		return result.toString();
 	}
 
 }
+
